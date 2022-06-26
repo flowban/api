@@ -1,0 +1,13 @@
+[package]
+name = "sprint-api"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+mongodb = "2.2.1"
+rocket = "0.5.0-rc.2"
+serde = "1.0.137"
+serde_json = "1.0.81"
+typetag = "0.1.8"

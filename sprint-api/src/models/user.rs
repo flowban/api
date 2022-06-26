@@ -1,9 +1,15 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
+struct Oid {
+    #[serde(rename = "$oid")]
+    oid: String,
+}
+
+#[derive(Debug, Default, Serialize, Deserialize)]
 pub struct User {
-    #[serde(rename = "id")]
-    id: String,
+    #[serde(rename = "_id")]
+    _id: Oid,
 
     #[serde(rename = "name")]
     name: String,
@@ -24,7 +30,7 @@ pub struct User {
     area: Area,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 pub struct Area {
     #[serde(rename = "identifier")]
     identifier: String,
@@ -33,7 +39,7 @@ pub struct Area {
     display_name: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 pub struct Role {
     #[serde(rename = "id")]
     id: String,
@@ -45,7 +51,7 @@ pub struct Role {
     permissions: Vec<Permission>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 pub struct Permission {
     #[serde(rename = "id")]
     id: String,

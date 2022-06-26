@@ -6,8 +6,20 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-mongodb = "2.2.1"
-rocket = "0.5.0-rc.2"
-serde = "1.0.137"
+rocket = { version = "0.5.0-rc.2", features = ["json"] }
+rocket_contrib = "0.4.11"
 serde_json = "1.0.81"
 typetag = "0.1.8"
+anyhow = "1.0.58"
+rocket_anyhow = "0.1.1"
+dotenv = "0.15.0"
+dotenv_codegen = "0.15.0"
+
+[dependencies.serde]
+features = ["derive"]
+version = "1.0.137"
+
+[dependencies.mongodb]
+version = "2.2.2"
+default-features = false
+features = ["async-std-runtime", "async-std"]

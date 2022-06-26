@@ -1,8 +1,8 @@
+use super::*;
 use super::{
     checkout::Checkout, client::Client, item::ItemTrait, order_status::OrderStatus,
     payment_method::PaymentMethod,
 };
-use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 pub struct Order {

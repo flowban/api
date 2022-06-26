@@ -1,5 +1,4 @@
-use serde::{Deserialize, Serialize};
-
+use super::*;
 use super::{product::Product, service::Service};
 
 #[typetag::serde(tag = "type")]

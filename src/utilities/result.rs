@@ -1,5 +1,5 @@
-use rocket::{Request, response};
 use rocket::response::Responder;
+use rocket::{response, Request};
 
 pub type Result<T = ()> = std::result::Result<T, Error>;
 

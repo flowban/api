@@ -1,35 +1,56 @@
-use mongodb::{Client, options::ClientOptions};
+use crate::utilities::client::CLIENT;
+use anyhow::Context;
 use mongodb::bson::doc;
-use rocket::futures::TryStreamExt;
+use mongodb::Database;
+use rocket::http::Status;
 use rocket::serde::json::Json;
 
 use crate::models::user::User;
-use crate::utilities::result::Result;
+
+static DATABASE: Database = CLIENT.database("sprint-testing");
 
 #[get("/users")]
-pub async fn get_users() -> Result<Json<Vec<User>>> {
-    let mut client_options = ClientOptions::parse(dotenv!("TESTING_URL")).await?;
-    client_options.app_name = Some("Sprint".to_string());
+pub async fn get_users() -> Result<Json<Vec<User>>, Status> {
+    User::read(None, &DATABASE)
+        .await
+        .map(Json)
+        .map_err(|_| Status::InternalServerError)
+}
 
-    let client = Client::with_options(client_options)?;
-    let database = client.database("sprint-testing");
-    let users = database
-        .collection::<User>("users")
-        .find(None, None)
-        .await?;
-    let users = users.try_collect().await?;
-    Ok(Json(users))
+#[get("/users/<username>")]
+pub async fn get_user(username: String) -> Result<Json<User>, Status> {
+    User::read(Some(username), &DATABASE)
+        .await
+        .map(|users| {
+            Json(
+                users
+                    .get(0)
+                    .with_context(|| "Failed to get user")?
+                    .to_owned(),
+            )
+        })
+        .map_err(|_| Status::InternalServerError)
 }
 
 #[post("/users", format = "application/json", data = "<user>")]
-pub async fn post_user(user: User) -> Result<Json<User>> {
-    let mut client_options = ClientOptions::parse(dotenv!("TESTING_URL")).await?;
-    client_options.app_name = Some("Sprint".to_string());
+pub async fn post_user(user: User) -> Result<Json<User>, Status> {
+    User::create(user, &DATABASE)
+        .await
+        .map(Json)
+        .map_err(|_| Status::InternalServerError)
+}
 
-    let client = Client::with_options(client_options)?;
-    let database = client.database("sprint-testing");
+#[put("/users/<username>", format = "application/json", data = "<user>")]
+pub async fn put_user(username: String, user: User) -> Result<Json<User>, Status> {
+    User::update(username, user, &DATABASE)
+        .await
+        .map(Json)
+        .map_err(|_| Status::InternalServerError)
+}
 
-    database.collection("users").insert_one(user.clone(), None).await?;
-
-    Ok(Json(user))
+#[delete("/users/<username>", format = "application/json")]
+pub async fn delete_user(username: String) -> Result<(), Status> {
+    User::delete(username, &DATABASE)
+        .await
+        .map_err(|_| Status::InternalServerError)
 }

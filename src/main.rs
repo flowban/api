@@ -2,16 +2,14 @@
 extern crate dotenv_codegen;
 #[macro_use]
 extern crate rocket;
+extern crate core;
 
 use anyhow::Result;
 use dotenv::dotenv;
 use rocket::request::Request;
 use rocket_dyn_templates::{context, Template};
 
-use routes::users::{
-    get_users,
-    post_user,
-};
+use routes::users::{get_users, post_user};
 
 mod models;
 mod routes;
@@ -19,10 +17,13 @@ mod utilities;
 
 #[get("/")]
 fn index() -> Template {
-    Template::render("home", context! {
-        first_name: "Jane",
-        last_name: "Doe"
-    })
+    Template::render(
+        "home",
+        context! {
+            first_name: "Jane",
+            last_name: "Doe"
+        },
+    )
 }
 
 #[catch(500)]
@@ -37,9 +38,12 @@ fn internal_errors() -> Template {
 
 #[catch(404)]
 fn not_found(req: &Request) -> Template {
-    Template::render("404", context! {
-        path: req.uri()
-    })
+    Template::render(
+        "404",
+        context! {
+            path: req.uri()
+        },
+    )
 }
 
 #[rocket::main]

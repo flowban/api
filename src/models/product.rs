@@ -1,8 +1,4 @@
-use std::collections::HashMap;
-
-use serde::{Deserialize, Serialize};
-
-use super::rule::Rule;
+use super::*;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Product {
@@ -16,7 +12,7 @@ pub struct Product {
     price: f64,
 
     #[serde(rename = "rules")]
-    rules: Vec<Rule>,
+    rules: Vec<rule::Rule>,
 
     #[serde(rename = "categories")]
     categories: Vec<Category>,

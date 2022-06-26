@@ -1,61 +1,60 @@
+use rocket::{Data, Request};
+use rocket::data::{FromData, Outcome, ToByteUnit};
+use rocket::http::{ContentType, Status};
+use rocket::outcome::Outcome::{Failure, Forward, Success};
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Default, Serialize, Deserialize)]
-struct Oid {
-    #[serde(rename = "$oid")]
-    oid: String,
-}
-
-#[derive(Debug, Default, Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone, Default)]
 pub struct User {
-    #[serde(rename = "_id")]
-    _id: Oid,
-
-    #[serde(rename = "name")]
     name: String,
-
-    #[serde(rename = "username")]
     username: String,
-
-    #[serde(rename = "email")]
     email: String,
-
-    #[serde(rename = "password")]
     password: String,
-
-    #[serde(rename = "role")]
-    role: Vec<Role>,
-
-    #[serde(rename = "area")]
-    area: Area,
+    roles: Vec<Role>,
 }
 
-#[derive(Debug, Default, Serialize, Deserialize)]
-pub struct Area {
-    #[serde(rename = "identifier")]
-    identifier: String,
-
-    #[serde(rename = "displayName")]
-    display_name: String,
+#[derive(Debug)]
+pub enum Error {
+    TooLarge,
+    Io(anyhow::Error),
 }
 
-#[derive(Debug, Default, Serialize, Deserialize)]
+#[rocket::async_trait]
+impl<'r> FromData<'r> for User {
+    type Error = Error;
+
+    async fn from_data(req: &'r Request<'_>, data: Data<'r>) -> Outcome<'r, Self> {
+        use Error::*;
+        let content_type = ContentType::new("application", "json");
+        if req.content_type() != Some(&content_type) {
+            return Forward(data)
+        }
+
+        let limit = req.limits().get("user").unwrap_or_else(|| 1000.bytes());
+
+        let string = match data.open(limit).into_string().await {
+            Ok(string) if string.is_complete() => string.into_inner(),
+            Ok(_) => return Failure((Status::PayloadTooLarge, TooLarge)),
+            Err(err) => return Failure((Status::InternalServerError, Io(err.into())))
+        };
+
+        return match serde_json::from_str::<User>(&*string) {
+            Ok(user) => Success(user),
+            Err(err) => Failure((Status::InternalServerError, Io(err.into())))
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Default)]
 pub struct Role {
-    #[serde(rename = "id")]
-    id: String,
-
-    #[serde(rename = "displayName")]
-    display_name: String,
-
-    #[serde(rename = "permissions")]
-    permissions: Vec<Permission>,
+    name: String,
+    permissions: Permissions,
 }
 
-#[derive(Debug, Default, Serialize, Deserialize)]
-pub struct Permission {
-    #[serde(rename = "id")]
-    id: String,
-
-    #[serde(rename = "displayName")]
-    display_name: String,
+#[derive(Serialize, Deserialize, Clone, Default)]
+pub struct Permissions {
+    read: Vec<String>,
+    create: Vec<String>,
+    update: Vec<String>,
+    delete: Vec<String>,
 }

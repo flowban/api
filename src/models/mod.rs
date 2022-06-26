@@ -5,6 +5,6 @@ pub mod order;
 pub mod order_status;
 pub mod payment_method;
 pub mod product;
+pub mod rule;
 pub mod service;
 pub mod user;
-pub mod rule;

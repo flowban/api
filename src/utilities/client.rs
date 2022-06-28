@@ -1,5 +1,5 @@
 use mongodb::Client;
 
 pub struct AppState {
-    pub(crate) client: Client
+    pub(crate) client: Client,
 }

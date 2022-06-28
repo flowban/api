@@ -1,18 +1,19 @@
+extern crate core;
 #[macro_use]
 extern crate dotenv_codegen;
 #[macro_use]
 extern crate rocket;
-extern crate core;
 
+use anyhow::Result;
 use dotenv::dotenv;
 use mongodb::Client;
-use anyhow::Result;
 use mongodb::options::ClientOptions;
 use rocket::request::Request;
 use rocket_dyn_templates::{context, Template};
 
-use routes::users::{get_users, post_user, get_user, put_user, delete_user};
 use routes::authentication::login;
+use routes::users::{delete_user, get_user, get_users, post_user, put_user};
+
 use crate::utilities::client::AppState;
 
 mod models;
@@ -59,7 +60,10 @@ async fn main() -> Result<()> {
         .attach(Template::fairing())
         .register("/", catchers![not_found, internal_error])
         .mount("/", routes![index, internal_errors])
-        .mount("/api", routes![get_users, post_user, get_user, put_user, delete_user])
+        .mount(
+            "/api",
+            routes![get_users, post_user, get_user, put_user, delete_user],
+        )
         .mount("/api/auth", routes![login])
         .launch()
         .await?;

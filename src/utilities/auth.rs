@@ -7,7 +7,7 @@ pub struct ApiKey(pub String);
 
 pub fn read_token(token: &str) -> anyhow::Result<String> {
     let key = HS256Key::generate();
-    let claims = key.verify_token::<NoCustomClaims>(&token, None)?;
+    let claims = key.verify_token::<NoCustomClaims>(token, None)?;
     claims.subject.with_context(|| "Failed to get claims")
 }
 

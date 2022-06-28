@@ -1,8 +1,9 @@
-use super::*;
 use anyhow::Result;
 use mongodb::bson::doc;
 use mongodb::Database;
 use rocket::futures::TryStreamExt;
+
+use super::*;
 
 #[derive(Serialize, Deserialize, Clone, Default)]
 pub struct User {
@@ -10,7 +11,7 @@ pub struct User {
     pub(crate) username: String,
     email: String,
     pub(crate) password: String,
-    roles: Vec<Role>,
+    pub(crate) roles: Vec<Role>,
 }
 
 impl User {
@@ -48,16 +49,17 @@ impl User {
     pub async fn exists(username: String, password: String, database: &Database) -> Option<User> {
         match Self::read(Some(username), database).await {
             Ok(users) => match users.get(0) {
-                Some(user) => if user.password == password {
-                    Some(user.to_owned())
-                } else {
-                    None
-                },
-                None => None
-            }
-            Err(_) => None
+                Some(user) => {
+                    if user.password == password {
+                        Some(user.to_owned())
+                    } else {
+                        None
+                    }
+                }
+                None => None,
+            },
+            Err(_) => None,
         }
-
     }
 }
 

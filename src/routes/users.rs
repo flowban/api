@@ -3,12 +3,12 @@ use mongodb::bson::doc;
 use rocket::http::Status;
 use rocket::serde::json::Json;
 use rocket::State;
-use crate::AppState;
 
+use crate::AppState;
 use crate::models::user::User;
 
 #[get("/users")]
-    pub async fn get_users(state: &State<AppState>) -> Result<Json<Vec<User>>, Status> {
+pub async fn get_users(state: &State<AppState>) -> Result<Json<Vec<User>>, Status> {
     let database = state.client.database("sprint-testing");
     User::read(None, &database)
         .await
@@ -43,7 +43,11 @@ pub async fn post_user(user: User, state: &State<AppState>) -> Result<Json<User>
 }
 
 #[put("/users/<username>", format = "application/json", data = "<user>")]
-pub async fn put_user(username: String, user: User, state: &State<AppState>) -> Result<Json<User>, Status> {
+pub async fn put_user(
+    username: String,
+    user: User,
+    state: &State<AppState>,
+) -> Result<Json<User>, Status> {
     let database = state.client.database("sprint-testing");
     User::update(username, user, &database)
         .await

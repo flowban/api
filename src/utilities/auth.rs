@@ -1,30 +1,21 @@
-use jwt::token::Signed;
-use sha2::Digest;
+use anyhow::Context;
+use jwt_simple::prelude::*;
 use rocket::outcome::Outcome;
 use rocket::request::{self, FromRequest, Request};
-use sha2::Sha256;
-
-pub extern crate jwt;
-pub extern crate rustc_serialize;
-
-use self::jwt::{Header, RegisteredClaims, Token};
 
 pub struct ApiKey(pub String);
 
-pub fn read_token(key: &str) -> Result<String, String> {
-    let token =
-        Token::<Header, RegisteredClaims, Signed>::parse(key).map_err(|_| "Unable to parse key".to_string())?;
-    if token.verify(b"secret_key", Sha256::new()) {
-        token.claims.sub.ok_or("Claims not valid".to_string())
-    } else {
-        Err("Token not valid".to_string())
-    }
+pub fn read_token(token: &str) -> anyhow::Result<String> {
+    let key = HS256Key::generate();
+    let claims = key.verify_token::<NoCustomClaims>(&token, None)?;
+    claims.subject.with_context(|| "Failed to get claims")
 }
 
-impl<'a, 'r> FromRequest<'a> for ApiKey {
+#[rocket::async_trait]
+impl<'r> FromRequest<'r> for ApiKey {
     type Error = ();
 
-    fn from_request(request: &'a Request<'r>) -> request::Outcome<ApiKey, ()> {
+    async fn from_request(request: &'r Request<'_>) -> request::Outcome<Self, Self::Error> {
         let keys: Vec<_> = request.headers().get("Authentication").collect();
         if keys.len() != 1 {
             return Outcome::Forward(());

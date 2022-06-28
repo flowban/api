@@ -1,4 +1,3 @@
-use core::panicking::panic;
 use super::*;
 use anyhow::Result;
 use mongodb::bson::doc;
@@ -29,24 +28,39 @@ impl User {
     }
     pub async fn create(user: Self, database: &Database) -> Result<User> {
         database
-            .collection("users")
+            .collection::<User>("users")
             .insert_one(user.clone(), None)
             .await?;
         Ok(user)
     }
     pub async fn update(username: String, user: User, database: &Database) -> Result<User> {
+        let user_str = serde_json::to_value(user.clone()).unwrap().to_string();
         database
-            .collection("users")
-            .update_one(doc! {"username": username}, user.clone(), None)
+            .collection::<User>("users")
+            .update_one(doc! {"username": username}, doc! {"user": user_str}, None)
             .await?;
         Ok(user)
     }
     pub async fn delete(username: String, database: &Database) -> Result<()> {
         database
-            .collection("users")
+            .collection::<User>("users")
             .delete_one(doc! {"username": username}, None)
             .await?;
         Ok(())
+    }
+    pub async fn exists(username: String, password: String, database: &Database) -> Option<User> {
+        match Self::read(Some(username.into()), database).await {
+            Ok(users) => match users.get(0) {
+                Some(user) => if user.password == password {
+                    Some(user.to_owned())
+                } else {
+                    None
+                },
+                None => None
+            }
+            Err(_) => None
+        }
+
     }
 }
 

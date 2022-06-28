@@ -15,9 +15,7 @@ dotenv_codegen = "0.15.0"
 typetag = "0.1.8"
 tokio = "1.19.2"
 once_cell = "1.12.0"
-jwt = "0.16.0"
-rustc-serialize = "0.3.24"
-sha2 = "0.10.2"
+jwt-simple = "0.11.0"
 
 [dependencies.serde]
 features = ["derive"]

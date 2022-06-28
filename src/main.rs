@@ -5,11 +5,15 @@ extern crate rocket;
 extern crate core;
 
 use dotenv::dotenv;
+use mongodb::Client;
+use anyhow::Result;
+use mongodb::options::ClientOptions;
 use rocket::request::Request;
 use rocket_dyn_templates::{context, Template};
 
 use routes::users::{get_users, post_user, get_user, put_user, delete_user};
 use routes::authentication::login;
+use crate::utilities::client::AppState;
 
 mod models;
 mod routes;
@@ -46,13 +50,18 @@ fn not_found(req: &Request) -> Template {
     )
 }
 
-#[launch]
-fn rocket() -> _ {
+#[rocket::main]
+async fn main() -> Result<()> {
     dotenv().ok();
-    rocket::build()
+    let client = Client::with_options(ClientOptions::parse(dotenv!("TESTING_URL")).await?)?;
+    let _ = rocket::build()
+        .manage(AppState { client })
         .attach(Template::fairing())
         .register("/", catchers![not_found, internal_error])
         .mount("/", routes![index, internal_errors])
         .mount("/api", routes![get_users, post_user, get_user, put_user, delete_user])
         .mount("/api/auth", routes![login])
+        .launch()
+        .await?;
+    Ok(())
 }

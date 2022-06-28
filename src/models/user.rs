@@ -15,10 +15,7 @@ pub struct User {
 
 impl User {
     pub async fn read(username: Option<String>, database: &Database) -> Result<Vec<User>> {
-        let filter = match username {
-            None => None,
-            Some(username) => Some(doc! {"username": username}),
-        };
+        let filter = username.map(|username| doc! {"username": username});
         let users = database
             .collection::<User>("users")
             .find(filter, None)
@@ -49,7 +46,7 @@ impl User {
         Ok(())
     }
     pub async fn exists(username: String, password: String, database: &Database) -> Option<User> {
-        match Self::read(Some(username.into()), database).await {
+        match Self::read(Some(username), database).await {
             Ok(users) => match users.get(0) {
                 Some(user) => if user.password == password {
                     Some(user.to_owned())
